@@ -2,35 +2,37 @@
 #include <stdlib.h>
 #include <time.h>
 
-void exchange(int *A, int i, int j) {
+void exchange(int A[], int i, int j) {
   int temp = A[i];
   A[i] = A[j];
   A[j] = temp;
 }
 
-int partition(int *A, int p, int r) {
+int partition(int A[], int p, int r) {
   int j;
   int x = A[r];
   int i = p - 1;
 
-  for(j = p; j < r - 1; j++) {
+  for(j = p; j < r; j++) {
     if(A[j] <= x) {
       i++;
       exchange(A, i, j);
     }
   }
+  
+  i++;
+  exchange(A, i, r);
 
-  exchange(A, i + 1, r);
-  return i + 1;
+  return i;
 }
 
-int randomizedPartition(int *A, int p, int r) {
+int randomizedPartition(int A[], int p, int r) {
   int i = rand() % r + 1;
   exchange(A, r, i);
   return partition(A, p, r);
 }
 
-int randomizedSelect(int *A, int p, int r, int i) {
+int randomizedSelect(int A[], int p, int r, int i) {
   if(p == r) {
     return A[p];
   }
@@ -60,7 +62,7 @@ int main (void) {
 
   printf("\n");
 
-  int result = randomizedSelect(A, 0, 9, 1);
+  int result = randomizedSelect(A, 0, 9, 8);
 
   printf("%d\n", result);
 	return 0;
