@@ -1,10 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 void exchange(int *A, int i, int j) {
   int temp = A[i];
   A[i] = A[j];
   A[j] = temp;
+}
+
+int random(int p, int r) {
+  return (rand() % (r - p + 1)) + 1;
 }
 
 int partition(int *A, int p, int r) {
@@ -23,7 +28,7 @@ int partition(int *A, int p, int r) {
 }
 
 int randomizedPartition(int *A, int p, int r) {
-  int i = RANDOM(p, r);
+  int i = random(p, r);
   exchange(A, r, i);
   return partition(A, p, r);
 }
@@ -34,6 +39,7 @@ int randomizedSelect(int *A, int p, int r, int i) {
   }
 
   int q = randomizedPartition(A, p, r);
+  // printf("%d\n", q);
   int k = q - p + 1;
 
   if(i == k) {
@@ -48,8 +54,11 @@ int randomizedSelect(int *A, int p, int r, int i) {
 }
 
 int main (void) {
+  srand(time(0));
+
   int A[7] = {7,6,2,3,1,2,0};
   int result = randomizedSelect(A, 0, 7, 3);
-  printf("%d", result);
+
+  printf("%d\n", result);
 	return 0;
 }

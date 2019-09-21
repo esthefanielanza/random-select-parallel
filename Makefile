@@ -5,9 +5,9 @@ LIBS = -lm
 all: ep2 clean
 
 ep2:  ep2.o
-	$(CC) $(CFLAGS) main -o ep2 $(LIBS)
+	$(CC) $(CFLAGS) ep2.o -o ep2 $(LIBS)
 
-sequential.o: ep2.c
+ep2.o: ep2.c
 	$(CC) $(CFLAGS) -c ep2.c
 
 
