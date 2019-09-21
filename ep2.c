@@ -8,27 +8,24 @@ void exchange(int *A, int i, int j) {
   A[j] = temp;
 }
 
-int random(int p, int r) {
-  return (rand() % (r - p + 1)) + 1;
-}
-
 int partition(int *A, int p, int r) {
   int j;
   int x = A[r];
   int i = p - 1;
 
   for(j = p; j < r - 1; j++) {
-    if(A[j] < x) {
+    if(A[j] <= x) {
+      i++;
       exchange(A, i, j);
     }
   }
 
-  exchange(A, i + 1, j);
+  exchange(A, i + 1, r);
   return i + 1;
 }
 
 int randomizedPartition(int *A, int p, int r) {
-  int i = random(p, r);
+  int i = rand() % r + 1;
   exchange(A, r, i);
   return partition(A, p, r);
 }
@@ -45,19 +42,25 @@ int randomizedSelect(int *A, int p, int r, int i) {
   if(i == k) {
     return A[q];
   } else if( i < k ) {
-    randomizedSelect(A, p, q - 1, i);
+    return randomizedSelect(A, p, q - 1, i);
   } else {
-    randomizedSelect(A, q + 1, r, i - k);
+    return randomizedSelect(A, q + 1, r, i - k);
   }
-
-  return 0;
 }
 
 int main (void) {
-  srand(time(0));
+  srand(time(NULL));
+  int n = 0;
+  int A[10];
 
-  int A[7] = {7,6,2,3,1,2,0};
-  int result = randomizedSelect(A, 0, 7, 3);
+  for(n = 0; n < 10; n++) {
+    A[n] = rand() % 100;
+    printf("%d ", A[n]);
+  }
+
+  printf("\n");
+
+  int result = randomizedSelect(A, 0, 9, 1);
 
   printf("%d\n", result);
 	return 0;
