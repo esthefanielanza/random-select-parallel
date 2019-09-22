@@ -2,13 +2,13 @@ CC = gcc
 CFLAGS = -g -O0 -Wall -Wextra -Werror -std=c99 -fopenmp
 LIBS = -lm
 
-all: ep2 clean
+all: sequential clean
 
-ep2:  ep2.o input.o
-	$(CC) $(CFLAGS) ep2.o input.o -o ep2 $(LIBS)
+sequential:  sequential.o input.o
+	$(CC) $(CFLAGS) sequential.o input.o -o sequential $(LIBS)
 
-ep2.o: ep2.c input.h
-	$(CC) $(CFLAGS) -c ep2.c
+sequential.o: sequential.c input.h
+	$(CC) $(CFLAGS) -c sequential.c
 
 input.o: input.c input.h
 	$(CC) $(CFLAGS) -c input.c
