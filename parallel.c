@@ -23,21 +23,18 @@ void sumPrefixes(int *prefixSumL, int *prefixSumR, int *bitsL, int* bitsR, int s
   }
 }
 
-int partition(int *A, int p, int r) {
-  int size = r-p+1;
+typedef struct Partition {
+  int *R;
+  int sizeR;
+  int *L;
+  int sizeL;
+} Partition;
 
-  int i = p - 1;
-  int x = p + (rand() % size);
-  int pivot = A[x];
+Partition *partition(int *A, int size, int pivot) {
   int j;
-
-  swap(A, x, r);
 
   int *bitsL = (int *)calloc(size, sizeof(int));
   int *bitsR = (int *)calloc(size, sizeof(int));
-
-  int *L = (int *)calloc(size, sizeof(int));
-  int *R = (int *)calloc(size, sizeof(int));
 
   int *prefixSumL = (int *)calloc(size, sizeof(int));
   int *prefixSumR = (int *)calloc(size, sizeof(int));
@@ -53,36 +50,58 @@ int partition(int *A, int p, int r) {
   
   sumPrefixes(prefixSumL, prefixSumR, bitsL, bitsR, size);
 
-  // Paralelizar essa parte aqui!
-  for(j = 0; j < size; j++) {
+  int sizeL = prefixSumL[size - 1];
+  int sizeR = prefixSumR[size - 1];
+
+  int *L = (int *)calloc(sizeL, sizeof(int));
+  int *R = (int *)calloc(sizeR, sizeof(int));
+
+  for(j = 0; j < sizeL; j++) {
     L[prefixSumL[bitsL[j]]] = A[j];
-    R[prefixSumR[bitsR[j]]] = A[j];
   }
 
-  return i;
+  for(j = 0; j < sizeR; j++) {
+    R[prefixSumR[bitsL[j]]] = A[j];
+  }
+
+  Partition *result = (Partition *)malloc(1 * sizeof(Partition));
+  result->L = L;
+  result->sizeL = sizeL;
+  
+  result->R = R;
+  result->sizeR = sizeR;
+
+  return result;
 }
 
-int randomizedPartition(int *A, int p, int r) {
-  int i = rand() % r + 1;
-  swap(A, r, i);
-  return partition(A, p, r);
-}
+int randomizedSelect(int *A, int size, int i) {
+  int x = rand() % size;
+  int pivot = A[x];
 
-int randomizedSelect(int *A, int p, int r, int i) {
-  if(p == r) {
-    return A[p];
+  Partition *result = partition(A, size, pivot);
+
+  printf("Partição da esquerda (%d)\n", result->sizeL);
+  for(int i = 0; i < result->sizeL; i++) {
+    printf("%d ", result->L[i]);
   }
 
-  int q = randomizedPartition(A, p, r);
-  int k = q - p + 1;
-
-  if(i == k) {
-    return A[q];
-  } else if( i < k ) {
-    return randomizedSelect(A, p, q - 1, i);
-  } else {
-    return randomizedSelect(A, q + 1, r, i - k);
+  printf("Partição da direita (%d)\n", result->sizeR);
+  for(int i = 0; i < result->sizeR; i++) {
+    printf("%d ", result->R[i]);
   }
+
+  if(result->sizeL == i - 1) {
+    return pivot;
+  }
+
+  // if(result->sizeL > i) {
+  //   return randomizedSelect(result->L, result->sizeL, i);
+  // } else {
+  //   return randomizedSelect(result->R, result->sizeR, i - result->sizeL - 1);
+  // }
+
+  printf("\n");
+  return 0;
 }
 
 int comparer (const void * a, const void * b) {
@@ -105,7 +124,7 @@ int main (int argc, char *argv[]) {
 
   startTime = omp_get_wtime();
 
-  int result = randomizedSelect(A, 0, n-1, i);
+  int result = randomizedSelect(A, n, i);
 
   endTime = omp_get_wtime();
 
