@@ -10,6 +10,12 @@ sequential:  sequential.o input.o
 sequential.o: sequential.c input.h
 	$(CC) $(CFLAGS) -c sequential.c
 
+parallel:  parallel.o input.o
+	$(CC) $(CFLAGS) parallel.o input.o -o parallel $(LIBS)
+
+parallel.o: parallel.c input.h
+	$(CC) $(CFLAGS) -c parallel.c
+
 input.o: input.c input.h
 	$(CC) $(CFLAGS) -c input.c
 
