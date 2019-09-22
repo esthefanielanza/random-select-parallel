@@ -3,7 +3,7 @@
 
 #include "input.h"
 
-void exchange(int *A, int i, int j) {
+void swap(int *A, int i, int j) {
   if(i != j){
     int temp = A[i];
     A[i] = A[j];
@@ -18,23 +18,23 @@ int partition(int *A, int p, int r) {
   int x = p + (rand() % size);
   int pivot = A[x];
 
-  exchange(A, x, r);
+  swap(A, x, r);
   for(x = p; x < r; x++) {
     if(A[x] <= pivot) {
       i++;
-      exchange(A, i, x);
+      swap(A, i, x);
     }
   }
 
   i++;
-  exchange(A, i, r);
+  swap(A, i, r);
 
   return i;
 }
 
 int randomizedPartition(int *A, int p, int r) {
   int i = rand() % r + 1;
-  exchange(A, r, i);
+  swap(A, r, i);
   return partition(A, p, r);
 }
 
