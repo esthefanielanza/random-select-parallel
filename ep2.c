@@ -1,6 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
+#include <omp.h>
+
+#include "input.h"
 
 void exchange(int *A, int i, int j) {
   if(i != j){
@@ -58,25 +59,37 @@ int comparer (const void * a, const void * b) {
 	return ( *(int*)a - *(int*)b );
 }
 
-int main (void) {
+int main (int argc, char *argv[]) {
   srand(time(NULL));
-  int n = 0;
-  int *A = (int*)malloc(5 * sizeof(int));
+  int n, i, threads, j;
+  char *type;
+  double startTime, endTime;
 
-  for(n = 0; n < 5; n++){
-    A[n] = rand() % 100;
+  readInput(argv, &n, &i, &type, &threads);
+
+  int *A = (int*)malloc(n * sizeof(int));
+
+  for(j = 0; j < n; j++){
+    A[j] = rand() % 100;
   }
 
-  qsort(A, 5, sizeof(int), comparer);
-  for(n = 0; n < 5; n++){
-    printf("%d ", A[n]);
+  startTime = omp_get_wtime();
+
+  int result = randomizedSelect(A, 0, n-1, i);
+
+  endTime = omp_get_wtime();
+
+  if(type[0] == 'a') {
+    qsort(A, n, sizeof(int), comparer);
+    for(j = 0; j < n; j++){
+      printf("%d ", A[j]);
+    }
+
+    printf("\n%d\n", result);
   }
-
-  printf("\n");
-
-  int result = randomizedSelect(A, 0, 4, 4);
-
-  printf("%d\n", result);
+ 
+  printf("%f\n", endTime - startTime);
+  (void)argc;
   free(A);
 	return 0;
 }
