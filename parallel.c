@@ -43,26 +43,28 @@ Partition *partition(int *A, int size, int pivot) {
   for(j = 0; j < size; j++) {
     if(A[j] < pivot) {
       bitsL[j] = 1;
-    } else {
+    }
+
+    else if(A[j] > pivot) {
       bitsR[j] = 1;
     }
   }
   
   sumPrefixes(prefixSumL, prefixSumR, bitsL, bitsR, size);
   
-  printf("bitsL\n");
-  for(int i = 0; i < size; i++) {
-    printf("%d ", bitsL[i]);
-  }
-  printf("\n\n");
+  // printf("bitsL\n");
+  // for(int i = 0; i < size; i++) {
+  //   printf("%d ", bitsL[i]);
+  // }
+  // printf("\n\n");
 
-  printf("PrefixSumL\n");
-  for(int i = 0; i < size; i++) {
-    printf("%d ", prefixSumL[i]);
-  }
-  printf("\n\n");
+  // printf("PrefixSumL\n");
+  // for(int i = 0; i < size; i++) {
+  //   printf("%d ", prefixSumL[i]);
+  // }
+  // printf("\n\n");
 
-  printf("sizeL %d\n\n", prefixSumL[size-1]);
+  // printf("sizeL %d\n\n", prefixSumL[size-1]);
 
   int sizeL = prefixSumL[size - 1];
   int sizeR = prefixSumR[size - 1];
@@ -91,51 +93,62 @@ Partition *partition(int *A, int size, int pivot) {
 }
 
 int randomizedSelect(int *A, int size, int i) {
-  int j;
-  printf("============");
-  printf("Array!\n");
-  printf("size %d\n", size);
-  for(j = 0; j < size; j++){
-    printf("%d ", A[j]);
-  };
-
-  printf("I: %d\n", i);
-  printf("\n");
+  // int j;
+  // printf("============");
+  // printf("Array!\n");
+  // printf("size %d\n", size);
+  // for(j = 0; j < size; j++){
+  //   printf("%d ", A[j]);
+  // };
 
   int x = rand() % size;
 
-  printf("x: %d", x);
+  // printf("x: %d", x);
   int pivot = A[x];
 
-  printf("Pivot %d\n\n", pivot);
+  // printf("Pivot %d\n\n", pivot);
   
   Partition *result = partition(A, size, pivot);
 
-  printf("Partição da esquerda (%d)\n", result->sizeL);
-  for(int j = 0; j < result->sizeL; j++) {
-    printf("%d ", result->L[j]);
-  }
-  printf("\n\n");
+  // printf("Partição da esquerda (%d)\n", result->sizeL);
+  // for(int j = 0; j < result->sizeL; j++) {
+  //   printf("%d ", result->L[j]);
+  // }
+  // printf("\n\n");
 
-  printf("Partição da direita (%d)\n", result->sizeR);
-  for(int j = 0; j < result->sizeR; j++) {
-    printf("%d ", result->R[j]);
-  }
-  printf("\n");
+  // printf("Partição da direita (%d)\n", result->sizeR);
+  // for(int j = 0; j < result->sizeR; j++) {
+  //   printf("%d ", result->R[j]);
+  // }
+  // printf("\n");
 
-  printf("\nTamanho L %d\n", result->sizeL);
-  printf("\n");
+  // printf("\nTamanho L %d\n", result->sizeL);
+  // printf("I: %d\n", i);
+  // printf("\n");
 
   if(result->sizeL == i - 1) {
+    // printf("\n returning pivo\n");
     return pivot;
   }
 
-  if(result->sizeL > i) {
-    printf("ESQUERDA");
+  if(result->sizeL == 0 && result->sizeR == 0) {
+    return pivot;
+  }
+
+  if(result->sizeL >= i) {
+    // printf("ESQUERDA");
     return randomizedSelect(result->L, result->sizeL, i);
   } else {
-    printf("DIREITA (%d)", result->sizeR);
+    // printf("DIREITA (%d)", result->sizeR);
     return randomizedSelect(result->R, result->sizeR, i - result->sizeL - 1);
+  }
+}
+
+void shuffle(int *A, int n) {
+  int i;
+
+  for(i = 0; i < n; i++) {
+    swap(A, i, rand() % n);
   }
 }
 
@@ -145,7 +158,7 @@ int comparer (const void * a, const void * b) {
 
 int main (int argc, char *argv[]) {
   srand(time(NULL));
-  int n, i, threads, j;
+  int n, i, threads, j, aux;
   char *type;
   double startTime, endTime;
 
@@ -153,14 +166,13 @@ int main (int argc, char *argv[]) {
 
   int *A = (int*)malloc(n * sizeof(int));
 
+  aux = 0;
   for(j = 0; j < n; j++){
-    A[j] = rand() % 100;
+    aux += 1 + rand() % 10;
+    A[j] = aux;
   }
-
-  printf("Ordenado!!!");
-    for(j = 0; j < n; j++){
-      printf("%d ", A[j]);
-    }
+  printf("\nCorrect answer: %d\n", A[i - 1]);
+  shuffle(A, n);
 
   printf("\n");
 
@@ -171,12 +183,10 @@ int main (int argc, char *argv[]) {
   endTime = omp_get_wtime();
 
   if(type[0] == 'a') {
-    qsort(A, n, sizeof(int), comparer);
     for(j = 0; j < n; j++){
       printf("%d ", A[j]);
     }
 
-    printf("\nCorrect answer: %d\n", A[i - 1]);
     printf("\n%d\n", result);
   }
  
