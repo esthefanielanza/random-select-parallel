@@ -2,7 +2,27 @@
 #include <omp.h>
 
 #include "input.h"
-// #include "pthred_pool.h"
+#include "pthreadPool.h"
+
+typedef struct ChangeSidesData {
+  int *bitsL;
+  int *L;
+  int *prefixSumL;
+  
+  int *bitsR;
+  int *R;
+  int *prefixSumR;
+
+  int *A;
+  int idx;
+} ChangeSidesData;
+
+typedef struct Partition {
+  int *R;
+  int sizeR;
+  int *L;
+  int sizeL;
+} Partition;
 
 void swap(int *A, int i, int j) {
   if(i != j){
@@ -24,14 +44,7 @@ void sumPrefixes(int *prefixSumL, int *prefixSumR, int *bitsL, int* bitsR, int s
   }
 }
 
-typedef struct Partition {
-  int *R;
-  int sizeR;
-  int *L;
-  int sizeL;
-} Partition;
-
-Partition *partition(int *A, int size, int pivot) {
+Partition *partition(int *A, int size, int pivot, void * pool) {
   int j;
 
   int *bitsL = (int *)calloc(size, sizeof(int));
@@ -74,13 +87,19 @@ Partition *partition(int *A, int size, int pivot) {
   int *R = (int *)calloc(sizeR, sizeof(int));
 
   for(j = 0; j < size; j++) {
-    if(bitsL[j] == 1) {
-      L[prefixSumL[j] - 1] = A[j];
-    }
+    char free = 't';
+    ChangeSidesData *changeSidesData = (ChangeSidesData *)malloc(1 * sizeof(ChangeSidesData)); 
+    changeSidesData->bitsL = bitsL;
+    changeSidesData->L = L;
+    changeSidesData->prefixSumL = prefixSumL;
+  
+    changeSidesData->bitsL = bitsL;
+    changeSidesData->L = L;
+    changeSidesData->prefixSumL = prefixSumL;
 
-    if(bitsR[j] == 1) {
-      R[prefixSumR[j] - 1] = A[j];
-    }
+    changeSidesData->A = bitsL;
+    changeSidesData->idx = j;
+    pool_enqueue(pool, (void *)changeSidesData, free);
   }
 
   Partition *result = (Partition *)malloc(1 * sizeof(Partition));
@@ -93,7 +112,7 @@ Partition *partition(int *A, int size, int pivot) {
   return result;
 }
 
-int randomizedSelect(int *A, int size, int i) {
+int randomizedSelect(int *A, int size, int i, void * pool) {
   // int j;
   // printf("============");
   // printf("Array!\n");
@@ -109,7 +128,7 @@ int randomizedSelect(int *A, int size, int i) {
 
   // printf("Pivot %d\n\n", pivot);
   
-  Partition *result = partition(A, size, pivot);
+  Partition *result = partition(A, size, pivot, pool);
 
   // printf("Partição da esquerda (%d)\n", result->sizeL);
   // for(int j = 0; j < result->sizeL; j++) {
@@ -138,10 +157,10 @@ int randomizedSelect(int *A, int size, int i) {
 
   if(result->sizeL >= i) {
     // printf("ESQUERDA");
-    return randomizedSelect(result->L, result->sizeL, i);
+    return randomizedSelect(result->L, result->sizeL, i, pool);
   } else {
     // printf("DIREITA (%d)", result->sizeR);
-    return randomizedSelect(result->R, result->sizeR, i - result->sizeL - 1);
+    return randomizedSelect(result->R, result->sizeR, i - result->sizeL - 1, pool);
   }
 }
 
@@ -155,6 +174,16 @@ void shuffle(int *A, int n) {
 
 int comparer (const void * a, const void * b) {
 	return ( *(int*)a - *(int*)b );
+}
+
+void changeSides(ChangeSidesData *d) {
+  if(d->bitsL[d->idx] == 1) {
+    d->L[d->prefixSumL[d->idx] - 1] = d->A[d->idx];
+  }
+
+  if(d->bitsR[d->idx] == 1) {
+    d->R[d->prefixSumR[d->idx] - 1] = d->A[d->idx];
+  }
 }
 
 int main (int argc, char *argv[]) {
@@ -179,7 +208,8 @@ int main (int argc, char *argv[]) {
 
   startTime = omp_get_wtime();
 
-  int result = randomizedSelect(A, n, i);
+  void * pool = pool_start((void *)(*changeSides), threads);
+  int result = randomizedSelect(A, n, i, pool);
 
   endTime = omp_get_wtime();
 
