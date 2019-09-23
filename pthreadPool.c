@@ -1,4 +1,4 @@
-#include "pthread_pool.h"
+#include "pthreadPool.h"
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,7 +25,7 @@ static void * thread(void *arg);
 
 void * pool_start(void * (*thread_func)(void *), unsigned int threads) {
 	struct pool *p = (struct pool *) malloc(sizeof(struct pool) + (threads-1) * sizeof(pthread_t));
-	int i;
+	unsigned int i;
 
 	pthread_mutex_init(&p->q_mtx, NULL);
 	pthread_cond_init(&p->q_cnd, NULL);
@@ -72,7 +72,7 @@ void pool_wait(void *pool) {
 void pool_end(void *pool) {
 	struct pool *p = (struct pool *) pool;
 	struct pool_queue *q;
-	int i;
+	unsigned int i;
 
 	p->cancelled = 1;
 
