@@ -88,19 +88,23 @@ Partition *partition(int *A, int size, int pivot, void * pool) {
 
   for(j = 0; j < size; j++) {
     char free = 't';
+  
     ChangeSidesData *changeSidesData = (ChangeSidesData *)malloc(1 * sizeof(ChangeSidesData)); 
     changeSidesData->bitsL = bitsL;
     changeSidesData->L = L;
     changeSidesData->prefixSumL = prefixSumL;
   
-    changeSidesData->bitsL = bitsL;
-    changeSidesData->L = L;
-    changeSidesData->prefixSumL = prefixSumL;
+    changeSidesData->bitsR = bitsR;
+    changeSidesData->R = R;
+    changeSidesData->prefixSumR = prefixSumR;
 
-    changeSidesData->A = bitsL;
+    changeSidesData->A = A;
     changeSidesData->idx = j;
+  
     pool_enqueue(pool, (void *)changeSidesData, free);
   }
+
+  pool_wait(pool);
 
   Partition *result = (Partition *)malloc(1 * sizeof(Partition));
   result->L = L;
@@ -209,6 +213,7 @@ int main (int argc, char *argv[]) {
   startTime = omp_get_wtime();
 
   void * pool = pool_start((void *)(*changeSides), threads);
+
   int result = randomizedSelect(A, n, i, pool);
 
   endTime = omp_get_wtime();
@@ -223,6 +228,7 @@ int main (int argc, char *argv[]) {
  
   printf("%f\n", endTime - startTime);
   (void)argc;
+  pool_end(pool);
   free(A);
 	return 0;
 }
