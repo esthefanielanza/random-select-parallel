@@ -11,7 +11,7 @@ sequential.o: sequential.c input.h
 	$(CC) $(CFLAGS) -c sequential.c
 
 parallel: parallel.o input.o pthreadPool.o
-	$(CC) $(CFLAGS) parallel.o input.o -o parallel $(LIBS)
+	$(CC) $(CFLAGS) parallel.o input.o pthreadPool.o -o parallel $(LIBS)
 
 parallel.o: parallel.c input.h pthreadPool.h
 	$(CC) $(CFLAGS) -c parallel.c
