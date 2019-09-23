@@ -1,4 +1,4 @@
-#include "pthreadPool.c"
+#include "pthreadPool.h"
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
