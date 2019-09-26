@@ -212,7 +212,7 @@ void changeSides(ChangeSidesData *d) {
 }
 
 int main (int argc, char *argv[]) {
-  srand(time(NULL));
+  srand(0);
   int n, i, threads, j, aux;
   char *type;
   double startTime, endTime;
