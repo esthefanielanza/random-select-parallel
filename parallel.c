@@ -4,6 +4,11 @@
 #include "input.h"
 #include "pthreadPool.h"
 
+typedef struct Interval {
+  int start;
+  int end;
+} Interval;
+
 typedef struct ChangeSidesData {
   int *bitsL;
   int *L;
@@ -15,6 +20,8 @@ typedef struct ChangeSidesData {
 
   int *A;
   int idx;
+
+  Interval *interval;
 } ChangeSidesData;
 
 typedef struct Partition {
@@ -44,79 +51,87 @@ void sumPrefixes(int *prefixSumL, int *prefixSumR, int *bitsL, int* bitsR, int s
   }
 }
 
-Partition *partition(int *A, int size, int pivot, void * pool) {
+Partition *partition(int *A, int size, int pivot, void * pool, int threads) {
   int j;
 
-  int *bitsL = (int *)calloc(size, sizeof(int));
-  int *bitsR = (int *)calloc(size, sizeof(int));
+  ChangeSidesData *changeSidesData = (ChangeSidesData *)malloc(1 * sizeof(ChangeSidesData)); 
 
-  int *prefixSumL = (int *)calloc(size, sizeof(int));
-  int *prefixSumR = (int *)calloc(size, sizeof(int));
+  changeSidesData->A = A;
+
+  changeSidesData->bitsL = (int *)calloc(size, sizeof(int));
+  changeSidesData->bitsR = (int *)calloc(size, sizeof(int));
+
+  changeSidesData->prefixSumL = (int *)calloc(size, sizeof(int));
+  changeSidesData->prefixSumR = (int *)calloc(size, sizeof(int));
 
 
   for(j = 0; j < size; j++) {
     if(A[j] < pivot) {
-      bitsL[j] = 1;
+      changeSidesData->bitsL[j] = 1;
     }
 
     else if(A[j] > pivot) {
-      bitsR[j] = 1;
+      changeSidesData->bitsR[j] = 1;
     }
   }
+
+  sumPrefixes(changeSidesData->prefixSumL, changeSidesData->prefixSumR, changeSidesData->bitsL, changeSidesData->bitsR, size);
   
-  sumPrefixes(prefixSumL, prefixSumR, bitsL, bitsR, size);
-  
-  // printf("bitsL\n");
-  // for(int i = 0; i < size; i++) {
-  //   printf("%d ", bitsL[i]);
+  // printf("\nPrefixSum L\n");
+  // for(j = 0; j < size; j++) {
+  //   printf("%d ", changeSidesData->prefixSumL[j]);
   // }
-  // printf("\n\n");
+  // printf("\n");
 
-  // printf("PrefixSumL\n");
-  // for(int i = 0; i < size; i++) {
-  //   printf("%d ", prefixSumL[i]);
+  // printf("\nPrefixSum R\n");
+  // for(j = 0; j < size; j++) {
+  //   printf("%d ", changeSidesData->prefixSumR[j]);
   // }
-  // printf("\n\n");
+  // printf("\n");
 
-  // printf("sizeL %d\n\n", prefixSumL[size-1]);
+  int sizeL = changeSidesData->prefixSumL[size - 1];
+  int sizeR = changeSidesData->prefixSumR[size - 1];
 
-  int sizeL = prefixSumL[size - 1];
-  int sizeR = prefixSumR[size - 1];
+  changeSidesData->L = (int *)calloc(sizeL, sizeof(int));
+  changeSidesData->R = (int *)calloc(sizeR, sizeof(int));
 
-  int *L = (int *)calloc(sizeL, sizeof(int));
-  int *R = (int *)calloc(sizeR, sizeof(int));
+  int sizeOfInterval = size/threads;
 
-  for(j = 0; j < size; j++) {
-    char free = 't';
-  
-    ChangeSidesData *changeSidesData = (ChangeSidesData *)malloc(1 * sizeof(ChangeSidesData)); 
-    changeSidesData->bitsL = bitsL;
-    changeSidesData->L = L;
-    changeSidesData->prefixSumL = prefixSumL;
-  
-    changeSidesData->bitsR = bitsR;
-    changeSidesData->R = R;
-    changeSidesData->prefixSumR = prefixSumR;
+  for(j = 0; j < threads; j++) {  
+    changeSidesData->interval = (Interval *)malloc(1 * sizeof(Interval)); 
 
-    changeSidesData->A = A;
-    changeSidesData->idx = j;
-  
-    pool_enqueue(pool, (void *)changeSidesData, free);
+    changeSidesData->interval->start = j * sizeOfInterval;
+    // printf("start: %d", changeSidesData->interval->start);
+    if(j == threads - 1) {
+      changeSidesData->interval->end = changeSidesData->interval->start + sizeOfInterval;
+    } else {
+      changeSidesData->interval->end = size - changeSidesData->interval->start;
+    }
+    // printf("end: %d", changeSidesData->interval->end);
+
+    pool_enqueue(pool, (void *)changeSidesData, (char)0);
   }
 
   pool_wait(pool);
 
+
+  // printf("\nL side\n");
+  // for(j = 0; j < sizeL; j++) {
+  //   printf("%d ", changeSidesData->L[j]);
+  // }
+  // printf("\n");
+
   Partition *result = (Partition *)malloc(1 * sizeof(Partition));
-  result->L = L;
+  result->L = changeSidesData->L;
   result->sizeL = sizeL;
   
-  result->R = R;
+  result->R = changeSidesData->R;
   result->sizeR = sizeR;
 
   return result;
 }
 
-int randomizedSelect(int *A, int size, int i, void * pool) {
+int randomizedSelect(int *A, int size, int i, void * pool, int threads) {
   // int j;
   // printf("============");
   // printf("Array!\n");
@@ -132,7 +147,7 @@ int randomizedSelect(int *A, int size, int i, void * pool) {
 
   // printf("Pivot %d\n\n", pivot);
   
-  Partition *result = partition(A, size, pivot, pool);
+  Partition *result = partition(A, size, pivot, pool, threads);
 
   // printf("Partição da esquerda (%d)\n", result->sizeL);
   // for(int j = 0; j < result->sizeL; j++) {
@@ -161,10 +176,10 @@ int randomizedSelect(int *A, int size, int i, void * pool) {
 
   if(result->sizeL >= i) {
     // printf("ESQUERDA");
-    return randomizedSelect(result->L, result->sizeL, i, pool);
+    return randomizedSelect(result->L, result->sizeL, i, pool, threads);
   } else {
     // printf("DIREITA (%d)", result->sizeR);
-    return randomizedSelect(result->R, result->sizeR, i - result->sizeL - 1, pool);
+    return randomizedSelect(result->R, result->sizeR, i - result->sizeL - 1, pool, threads);
   }
 }
 
@@ -181,12 +196,18 @@ int comparer (const void * a, const void * b) {
 }
 
 void changeSides(ChangeSidesData *d) {
-  if(d->bitsL[d->idx] == 1) {
-    d->L[d->prefixSumL[d->idx] - 1] = d->A[d->idx];
-  }
+  int i;
 
-  if(d->bitsR[d->idx] == 1) {
-    d->R[d->prefixSumR[d->idx] - 1] = d->A[d->idx];
+  for(i = d->interval->start; i < d->interval->end; i++) {
+    // printf("changing %d", i);
+
+    if(d->bitsL[i] == 1) {
+      d->L[d->prefixSumL[i] - 1] = d->A[i];
+    }
+
+    if(d->bitsR[i] == 1) {
+      d->R[d->prefixSumR[i] - 1] = d->A[i];
+    }
   }
 }
 
@@ -214,7 +235,7 @@ int main (int argc, char *argv[]) {
 
   void * pool = pool_start((void *)(*changeSides), threads);
 
-  int result = randomizedSelect(A, n, i, pool);
+  int result = randomizedSelect(A, n, i, pool, threads);
 
   endTime = omp_get_wtime();
 
