@@ -190,7 +190,7 @@ void calculateBits(ThreadOperation *d) {
 }
 
 int main (int argc, char *argv[]) {
-  srand(0);
+  srand(time(NULL));
   int n, i, threads, j, aux;
   char *type;
   double startTime, endTime;
@@ -204,10 +204,7 @@ int main (int argc, char *argv[]) {
     aux += 1 + rand() % 10;
     A[j] = aux;
   }
-  printf("\nCorrect answer: %d\n", A[i - 1]);
   shuffle(A, n);
-
-  printf("\n");
 
   startTime = omp_get_wtime();
 
@@ -225,7 +222,7 @@ int main (int argc, char *argv[]) {
 
     printf("\n%d\n", result);
   }
- 
+
   printf("%f\n", endTime - startTime);
   (void)argc;
   pool_end(pool);

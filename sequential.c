@@ -61,11 +61,11 @@ int comparer (const void * a, const void * b) {
 
 int main (int argc, char *argv[]) {
   srand(time(NULL));
-  int n, i, threads, j;
+  int n, i, j;
   char *type;
   double startTime, endTime;
 
-  readInput(argv, &n, &i, &type, &threads);
+  readInput(argv, &n, &i, &type, NULL);
 
   int *A = (int*)malloc(n * sizeof(int));
 
