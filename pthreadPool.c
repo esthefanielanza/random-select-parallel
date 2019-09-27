@@ -43,12 +43,11 @@ void * pool_start(void * (*thread_func)(void *), unsigned int threads) {
 	return p;
 }
 
-void pool_enqueue(void *pool, void *arg, char free) {
+void pool_enqueue(void *pool, void *arg) {
 	struct pool *p = (struct pool *) pool;
 	struct pool_queue *q = (struct pool_queue *) malloc(sizeof(struct pool_queue));
 	q->arg = arg;
 	q->next = NULL;
-	q->free = free;
 
 	pthread_mutex_lock(&p->q_mtx);
 	if (p->end != NULL) p->end->next = q;
@@ -88,7 +87,7 @@ void pool_end(void *pool) {
 		q = p->q;
 		p->q = q->next;
 
-		if (q->free) free(q->arg);
+		free(q->arg);
 		free(q);
 	}
 
